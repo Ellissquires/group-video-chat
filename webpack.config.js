@@ -49,6 +49,45 @@ module.exports = {
                 ],
                 exclude: [/node_modules/]
             },
+            {
+                test: /\.global\.css$/,
+                use: [
+                  {
+                    loader: 'style-loader',
+                  },
+                  {
+                    loader: 'css-loader',
+                    options: {
+                      sourceMap: true,
+                    },
+                  },
+                  {
+                    loader: 'postcss-loader',
+                    options: {
+                      ident: 'postcss',
+                      plugins: [require('tailwindcss'), require('autoprefixer')],
+                    },
+                  },
+                ],
+            },
+            {
+                test: /^((?!\.global).)*\.css$/,
+                use: [
+                  {
+                    loader: 'style-loader',
+                  },
+                  {
+                    loader: 'css-loader',
+                    options: {
+                      modules: {
+                        localIdentName: '[name]__[local]__[hash:base64:5]',
+                      },
+                      sourceMap: true,
+                      importLoaders: 1,
+                    },
+                  },
+                ],
+              },
 
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             {

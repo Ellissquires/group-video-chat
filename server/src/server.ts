@@ -105,7 +105,7 @@ export class Server {
       */
       socket.on('leave-room', (data) => {
         const roomIndex = this.activeRooms.findIndex(room => room.id === data.room);
-        this.activeRooms[roomIndex]
+        // this.activeRooms[roomIndex]
         console.log(`${user.id} disconnected from ${data.room}`);
       });
     });

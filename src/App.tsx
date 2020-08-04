@@ -6,6 +6,7 @@ import { hot } from 'react-hot-loader';
 import { ChatRoom } from './components/ChatRoom';
 import { RoomList } from './components/RoomList'
 import socketIOClient from "socket.io-client";
+import './app.global.css';
 
 import {
   BrowserRouter as Router,
