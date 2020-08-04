@@ -14,7 +14,7 @@ export class Server {
   private activeRooms: Array<Room> = [];
   private activeUsers: Array<User> = [];
 
-  private readonly PORT = 8080;
+  private readonly PORT = process.env.PORT || "5000";
 
   constructor() {
     this.initialise();
@@ -102,7 +102,7 @@ export class Server {
     return this.activeUsers.find(user => user.socketId == socketId);
   }
 
-  public listen(callback: (port: number) => void): void {
+  public listen(callback: (port: string) => void): void {
     this.httpServer.listen(this.PORT, () => callback(this.PORT));
   }
 
