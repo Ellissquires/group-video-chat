@@ -14,7 +14,7 @@ export class Server {
   private activeRooms: Array<Room> = [];
   private activeUsers: Array<User> = [];
 
-  private readonly PORT = process.env.PORT || 8080;
+  private readonly PORT = 8080;
 
   constructor() {
     this.initialise();
