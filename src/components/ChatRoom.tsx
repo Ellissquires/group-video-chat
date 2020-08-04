@@ -1,34 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VideoStream from './VideoStream';
 import { User } from '../types';
-import Peer from 'peerjs';
+import Peer, { MediaConnection } from 'peerjs';
 
-const VIDEO_OPTIONS = { audio: false, video: { width: 1280, height: 720 } };
+const VIDEO_OPTIONS = { audio: true};
+
+type Connection = {
+  stream: MediaStream;
+  mediaConnection: MediaConnection;
+  user: User
+}
 
 const ChatRoom = (props: any) => {
   const { id } = props.match.params;
   const { socket } = props;
   const [connected, setConnected] = useState(false);
-  const [remoteStreams, setRemoteStreams] = useState([] as MediaStream[])
-  const [localStream, setLocalStream] = useState({} as MediaStream);
+  const [localConnection, setLocalConnection] = useState({} as Connection);
+  const [remoteConections, setRemoteConnections] = useState([] as Connection[])
   let peer: Peer;
 
   const handlePeerConnection = (user: User, stream: MediaStream) => {
     console.log(`${user.id} has joined the room`);
     let call = peer.call(user.id, stream);
     call.on('stream', (remoteStream) => {
-      setRemoteStreams([...remoteStreams, remoteStream]);
+      const remoteConnection: Connection = {
+        stream: remoteStream,
+        mediaConnection: call,
+        user: user
+      }
+      setRemoteConnections([...remoteConections, remoteConnection]);
     })
   }
 
   const setupLocalPeer = (user: User, stream: MediaStream) => {
-    setConnected(true);
     console.log(`Setting up peer connection for ${user.id}`);
+    setConnected(true);
     peer = new Peer(user.id);
     peer.on('call', (call) => {
       call.answer(stream);
       call.on('stream', (remoteStream) => {
-        setRemoteStreams([...remoteStreams, remoteStream]);
+        const remoteConnection: Connection = {
+          stream: remoteStream,
+          mediaConnection: call,
+          user: user
+        }
+        setRemoteConnections([...remoteConections, remoteConnection]);
       });
     })
 
@@ -38,7 +54,7 @@ const ChatRoom = (props: any) => {
   useEffect(() => {
     async function enableLocalStream() {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS);
-      setLocalStream(stream);
+      setLocalConnection({...localConnection, stream: stream});
       return stream;
     }
 
@@ -54,8 +70,8 @@ const ChatRoom = (props: any) => {
 
   return (
     <div>
-      { connected ? <VideoStream stream={localStream}/> : <p>Connecting...</p> }
-      { remoteStreams.map(remoteStream => <VideoStream stream={remoteStream}/>)}
+      { connected ? <VideoStream stream={localConnection.stream}/> : <p>Connecting...</p> }
+      { remoteConections.map(conn => <VideoStream stream={conn.stream}/>) }
     </div>
   )
 }
