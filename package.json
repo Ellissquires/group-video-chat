@@ -11,7 +11,7 @@
   "scripts": {
     "build": "webpack",
     "start:client": "webpack-dev-server --config ./webpack.config.js",
-    "start": "(cd server && npm start)",
+    "start": "npm run build && (cd server && npm start)",
     "prettier": "prettier \"src/**/*.{ts,tsx,js,jsx}\"",
     "prettier:check": "npm run prettier -- --list-different",
     "prettier:write": "npm run prettier -- --write",

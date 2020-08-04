@@ -3,7 +3,7 @@ import VideoStream from './VideoStream';
 import { User } from '../types';
 import Peer, { MediaConnection } from 'peerjs';
 
-const VIDEO_OPTIONS = { audio: true};
+const VIDEO_OPTIONS = { audio: true, video: { width: 1280, height: 720 }};
 
 type Connection = {
   stream: MediaStream;
