@@ -14,7 +14,7 @@ const VideoStream = (props: VideoStreamProps) => {
   useEffect(() => { videoRef.current.srcObject = stream });
 
   return (
-    <div className="p-4 sm:w-1/2 md:w-1/3 lg:max-w-lg select-none">
+    <div className="p-4 w-full sm:w-1/2 lg:max-w-lg select-none">
       <div className="relative pb-3/4">
         <video className="absolute h-full w-full rounded-lg shadow-md object-cover" ref={videoRef} autoPlay></video>
       </div>

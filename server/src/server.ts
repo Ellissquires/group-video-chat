@@ -103,9 +103,9 @@ export class Server {
         2. unsusbcribe the user from the room socket broadcasts
         3. ...
       */
-      socket.on('leave-room', (data) => {
+      socket.on('leave', (data) => {
         const roomIndex = this.activeRooms.findIndex(room => room.id === data.room);
-        // this.activeRooms[roomIndex]
+
         console.log(`${user.id} disconnected from ${data.room}`);
       });
     });

@@ -1,96 +1,95 @@
 import React, { useState, useEffect, useRef, useReducer } from 'react';
 import VideoStream from './VideoStream';
 import { User } from '../types';
-import Peer, { MediaConnection } from 'peerjs';
+import Peer from 'peerjs';
+import Connection from '../utils/Connection';
 
+// local stream video options TODO: move into component (allow user to change)
 const VIDEO_OPTIONS = { audio: false, video: true};
 
-type Connection = {
-  stream: MediaStream;
-  mediaConnection: MediaConnection;
-  user: User
-}
-
 const ChatRoom = (props: any) => {
+  // get the room id from the url
   const { id } = props.match.params;
+  // store a reference to the client socket
   const { socket } = props;
-  const [connected, setConnected] = useState(false);
+  // state to manage if a user is connected to the room or not
+  const [ connected, setConnected ] = useState(false);
+  // state the manage the local user
   const [ user, setUser ] = useState({} as User);
-  const [localConnection, setLocalConnection] = useState({} as Connection);
-  const [remoteConections, setRemoteConnections] = useState([] as Connection[])
+  // stores the local users connection to the room, contains local video stream
+  const [ localConnection, setLocalConnection ] = useState({} as Connection);
+  // state to manage an array of remote connections, on change will re-render the displayed 
+  // remote streams
+  const [ remoteConections, setRemoteConnections ] = useState([] as Connection[]);
+  // declare a peerjs Peer for the local user, will allow connections to remote clients
   let peer: Peer;
 
-  const openRemoteConnection = (stream: MediaStream, call: MediaConnection, user: User) => {
-    const remoteConnection: Connection = {
-      stream: stream,
-      mediaConnection: call,
-      user: user
-    }
-    setRemoteConnections(remoteConections => [...remoteConections, remoteConnection]);
-  }
-
-  const closeRemoteConnection = (call: MediaConnection) => {
-    console.log(`${call.peer} closed the connection`);
-    setRemoteConnections(remoteConections.filter(conn => conn.user.id !== call.peer));
-  }
-
+  /*
+    handlePeerConnection -> uses the local peer to form a MediaConnection with a 
+    remote user, the local users stream is sent and the remote users stream is
+    received. If the connection is successful a new remote connection is created
+    and the remoteConnections are updated causing the component to re-render.
+  */
   const handlePeerConnection = (user: User, stream: MediaStream) => {
-    if(remoteConections.find(conn => conn.user.id === user.id)) return
     console.log(`${user.id} has joined the room`);
     let call = peer.call(user.id, stream);
     call.on('stream', (remoteStream) => {
-      openRemoteConnection(remoteStream, call, user);
+      const conn = new Connection(remoteStream, call, user);
+      setRemoteConnections(remoteConections => [...remoteConections, conn]);
     })
-
-    call.on('error', () => closeRemoteConnection(call));
   }
 
+  /*
+    setupLocalPeer -> sets the local peer to listen to incoming users and 
+    remote connections. if a call (remote connection) is received the local
+    peer responds with the local stream and in return receives the remote users
+    stream. Before listening for incoming calls a listener is defined to create
+    peer connections with newly connected users.
+  */
   const setupLocalPeer = (user: User, stream: MediaStream) => {
-    if(remoteConections.find(conn => conn.user.id === user.id)) return
-    setUser(user);
     console.log(`Setting up peer connection for ${user.id}`);
     setConnected(true);
+    setUser(user);
+    // when a user joins the room try and form a p2p connection with them.
+    socket.on('user-joined', (user: User) => handlePeerConnection(user, stream));
+
+    // initialise peerjs using the local user is as the peer id, this will allow
+    // remote connections requests to be linked to the user who sent the
     peer = new Peer(user.id);
+    // listen for incoming calls.
     peer.on('call', (call) => {
       call.answer(stream);
       call.on('stream', (remoteStream) => {
-        openRemoteConnection(remoteStream, call, user);
+        const remoteUser: User = {id: call.peer, socketId: ""};
+        const conn = new Connection(remoteStream, call, remoteUser);
+        setRemoteConnections(remoteConections => [...remoteConections, conn]);
       });
-
-      call.on('error', () => closeRemoteConnection(call));
     })
-    
-    socket.on('user-joined', (user: User) => handlePeerConnection(user, stream));
   }
 
   useEffect(() => {
-    console.log("In useEffect");
     async function enableLocalStream() {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS);
+      const localConnection = new Connection(stream, null, user);
       setLocalConnection({...localConnection, stream: stream});
       return stream;
     }
     
     enableLocalStream().then((stream) => {
-      socket.emit('join', {room: id});
       socket.on('join-success', (user: User) => setupLocalPeer(user, stream));
       socket.on('join-failed', () => console.log("Could not join the room"));
+      socket.emit('join', {room: id});
     }).catch(() => console.log("Could not receive video feed"));
-
-
+    
     return () => {
-      remoteConections.forEach(conn => conn.mediaConnection.close());
-      socket.emit('leave-room', {room: id});
-      socket.off('join-success');
-      socket.off('join-failed');
-      socket.off('user-joined');
+      socket.emit('leave', {room: id});
     }
   
-  },[]);
+  },[id]);
 
   return (
-    <div className="flex flex-wrap h-full w-full px-20 py-10 bg-gray-200">
-      { connected ? <VideoStream user={user} stream={localConnection.stream}/> : <p>Connecting...</p> }
+    <div className="flex flex-wrap h-screen py-3 px-5 w-full sm:px-20 sm:py-10 bg-gray-200">
+      { connected ? <VideoStream user={localConnection.user} stream={localConnection.stream}/> : <p>Connecting...</p> }
       { remoteConections.map(conn => <VideoStream key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
     </div>
   )
