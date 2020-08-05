@@ -14,7 +14,7 @@ const ChatRoom = (props: any) => {
   const { socket } = props;
   // state to manage if a user is connected to the room or not
   const [ connected, setConnected ] = useState(false);
-  // state the manage the local user
+  // state to manage the local user
   const [ user, setUser ] = useState({} as User);
   // stores the local users connection to the room, contains local video stream
   const [ localConnection, setLocalConnection ] = useState({} as Connection);
@@ -68,6 +68,7 @@ const ChatRoom = (props: any) => {
   }
 
   useEffect(() => {
+    // Load the users camera feed into a local Connection object
     async function enableLocalStream() {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS);
       const localConnection = new Connection(stream, null, user);
@@ -75,6 +76,7 @@ const ChatRoom = (props: any) => {
       return stream;
     }
     
+    // Once the users stream has loaded setup socket hooks and notify the server that the client has joined the room
     enableLocalStream().then((stream) => {
       socket.on('join-success', (user: User) => setupLocalPeer(user, stream));
       socket.on('join-failed', () => console.log("Could not join the room"));
@@ -84,7 +86,6 @@ const ChatRoom = (props: any) => {
     return () => {
       socket.emit('leave', {room: id});
     }
-  
   },[id]);
 
   return (
