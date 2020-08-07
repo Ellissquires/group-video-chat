@@ -25,18 +25,24 @@ const ChatRoom = (props: any) => {
   let peer: Peer;
 
   /*
-    handlePeerConnection -> uses the local peer to form a MediaConnection with a 
+    openPeerConnection -> uses the local peer to form a MediaConnection with a 
     remote user, the local users stream is sent and the remote users stream is
     received. If the connection is successful a new remote connection is created
     and the remoteConnections are updated causing the component to re-render.
   */
-  const handlePeerConnection = (user: User, stream: MediaStream) => {
+  const openPeerConnection = (user: User, stream: MediaStream) => {
     console.log(`${user.id} has joined the room`);
     let call = peer.call(user.id, stream);
     call.on('stream', (remoteStream) => {
       const conn = new Connection(remoteStream, call, user);
       setRemoteConnections(remoteConections => [...remoteConections, conn]);
     })
+  }
+
+  const closePeerConnection = (user: User) => {
+    // userConn.mediaConnection.close();
+    setRemoteConnections(remoteConnections => remoteConnections
+      .filter(conn => conn.user.id !== user.id));
   }
 
   /*
@@ -48,10 +54,12 @@ const ChatRoom = (props: any) => {
   */
   const setupLocalPeer = (user: User, stream: MediaStream) => {
     console.log(`Setting up peer connection for ${user.id}`);
-    setConnected(true);
     setUser(user);
+    setConnected(true);
     // when a user joins the room try and form a p2p connection with them.
-    socket.on('user-joined', (user: User) => handlePeerConnection(user, stream));
+    socket.on('user-joined', (user: User) => openPeerConnection(user, stream));
+    // when a user leaves the room close the p2p connection
+    socket.on('user-left', (user: User) => closePeerConnection(user));
 
     // initialise peerjs using the local user is as the peer id, this will allow
     // remote connections requests to be linked to the user who sent the
@@ -71,8 +79,7 @@ const ChatRoom = (props: any) => {
     // Load the users camera feed into a local Connection object
     async function enableLocalStream() {
       const stream = await navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS);
-      const localConnection = new Connection(stream, null, user);
-      setLocalConnection({...localConnection, stream: stream});
+      setLocalConnection(new Connection(stream, null, user));
       return stream;
     }
     
@@ -83,14 +90,14 @@ const ChatRoom = (props: any) => {
       socket.emit('join', {room: id});
     }).catch(() => console.log("Could not receive video feed"));
     
-    return () => {
-      socket.emit('leave', {room: id});
-    }
+    // return () => {
+    //   socket.emit('leave', {room: id, user: user});
+    // }
   },[id]);
 
   return (
     <div className="flex flex-wrap h-screen py-3 px-5 w-full sm:px-20 sm:py-10 bg-gray-200">
-      { connected ? <VideoStream user={localConnection.user} stream={localConnection.stream}/> : <p>Connecting...</p> }
+      { connected ? <VideoStream user={user} stream={localConnection.stream}/> : <p>Connecting...</p> }
       { remoteConections.map(conn => <VideoStream key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
     </div>
   )

@@ -1,4 +1,5 @@
 import { MediaConnection } from "peerjs";
+import React, { useState, useEffect } from 'react';
 import { User } from "../types";
 
 class Connection {
@@ -11,7 +12,6 @@ class Connection {
     this.mediaConnection = mediaConnection;
     this.user = user;
   }
-
 
 }
 

@@ -88,6 +88,10 @@ export class Server {
         this.socket.sockets.in(data.room).emit('user-joined', user);
         // connected the users socket to the joined room
         socket.join(data.room);
+        // find the index of the joined room
+        const roomIndex = this.activeRooms.findIndex(room => room.id === data.room);
+        // update the user list
+        this.activeRooms[roomIndex].users.push(user);
         console.log(`${user.id} connected to ${data.room}`);
       });
 
@@ -95,6 +99,13 @@ export class Server {
       socket.on('disconnect', () => {
         // Remove the user from the active users
         this.activeUsers = this.activeUsers.filter(user => user.id !== user.id);
+        // this is scuffed
+        const joinedRooms = this.activeRooms.filter(room => room.users.includes(user));
+        joinedRooms.forEach(room => {
+          socket.leave(room.id);
+          this.socket.sockets.in(room.id).emit('user-left', user);
+          console.log(`${user.id} disconnected from ${room.id}`);
+        });
         console.log(`User disconnected (${user.id})`);
       });
 
@@ -104,8 +115,12 @@ export class Server {
         3. ...
       */
       socket.on('leave', (data) => {
-        const roomIndex = this.activeRooms.findIndex(room => room.id === data.room);
-
+        const { room , user } = data;
+        const roomIndex = this.activeRooms.findIndex(r => r.id === room);
+        // let users = this.activeRooms[roomIndex].users;
+        // users = users.filter(u => u.id !== user.id);
+        socket.leave(room);
+        this.socket.sockets.in(room).emit('user-left', user);
         console.log(`${user.id} disconnected from ${data.room}`);
       });
     });
