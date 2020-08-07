@@ -75,7 +75,6 @@ export class Server {
       const user = {id: nanoid(), socketId: socket.id};
       this.activeUsers.push(user);
       console.log(`User connected (${user.id})`);
-
       // Handling room connections
       socket.on('join', (data) => {
         // find the room the user connected to
