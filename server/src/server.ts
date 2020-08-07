@@ -86,12 +86,10 @@ export class Server {
         socket.emit('join-success', user);
         // notify the rooms users that a new user has joined
         this.socket.sockets.in(data.room).emit('user-joined', user);
-        // connected the users socket to the joined room
+        // connect the users socket to the joined room
         socket.join(data.room);
-        // find the index of the joined room
-        const roomIndex = this.activeRooms.findIndex(room => room.id === data.room);
-        // update the user list
-        this.activeRooms[roomIndex].users.push(user);
+        // add the user to room
+        room.users.push(user);
         console.log(`${user.id} connected to ${data.room}`);
       });
 
@@ -116,9 +114,6 @@ export class Server {
       */
       socket.on('leave', (data) => {
         const { room , user } = data;
-        const roomIndex = this.activeRooms.findIndex(r => r.id === room);
-        // let users = this.activeRooms[roomIndex].users;
-        // users = users.filter(u => u.id !== user.id);
         socket.leave(room);
         this.socket.sockets.in(room).emit('user-left', user);
         console.log(`${user.id} disconnected from ${data.room}`);
