@@ -3,6 +3,7 @@ import VideoStream from './VideoStream';
 import { User } from '../types';
 import Peer from 'peerjs';
 import Connection from '../utils/Connection';
+import { Stream } from 'stream';
 
 // local stream video options TODO: move into component (allow user to change)
 const VIDEO_OPTIONS = { audio: false, video: true};
@@ -83,11 +84,14 @@ const ChatRoom = (props: any) => {
       setLocalConnection(new Connection(stream, null, user));
       setLoaded(true);
       socket.on('join-success', (user: User) => setupLocalPeer(user, stream));
-      socket.on('join-failed', () => console.log("Could not join the room"));
+      socket.on('join-failed', () => setLoaded(false));
       socket.emit('join', {room: id});
     }).catch(() => console.log("Could not receive video feed"));
 
-  },[id]);
+    return () => {
+      if (loaded) localConnection.stream.getTracks().forEach(track => track.stop());
+    }
+    },[id]);
 
   return (
     <div className="flex">

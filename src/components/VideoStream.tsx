@@ -13,7 +13,7 @@ const VideoStream = (props: VideoStreamProps) => {
   const { stream, user, loaded} = props;
   useEffect(() => { 
     if (loaded) videoRef.current.srcObject = stream 
-  }, [loaded]);
+  });
 
   return (
     <div className="p-4 sm:w-full md:w-1/2 lg:max-w-lg select-none">
@@ -32,7 +32,7 @@ const VideoStream = (props: VideoStreamProps) => {
               </div>
             </div>
             <h4 className="mt-2 font-semibold text-lg leading-tight truncate">
-              {user.id}
+              {loaded ? user.id : <span>Connecting...</span>}
             </h4>
           </div>
           <div className="flex flex-col ml-2">
