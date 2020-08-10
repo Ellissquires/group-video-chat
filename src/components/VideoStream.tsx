@@ -5,22 +5,26 @@ import { User } from '../types';
 type VideoStreamProps = {
   stream: MediaStream;
   user: User;
-  loading: boolean;
+  loaded: boolean;
 }
 
 const VideoStream = (props: VideoStreamProps) => {
   let videoRef = useRef<HTMLVideoElement>();
-  const { stream, user, loading} = props;
-
-  useEffect(() => { videoRef.current.srcObject = stream });
+  const { stream, user, loaded} = props;
+  useEffect(() => { 
+    if (loaded) videoRef.current.srcObject = stream 
+  }, [loaded]);
 
   return (
     <div className="p-4 sm:w-full md:w-1/2 lg:max-w-lg select-none">
       <div className="relative pb-3/4">
-        <video className="absolute h-full w-full rounded-lg shadow-md object-cover" ref={videoRef} autoPlay></video>
+        <div className="absolute h-full w-full rounded-lg shadow-md object-cover border-4 border-gray-800 bg-gray-800 flex justify-center items-center">
+          { loaded && <video ref={videoRef} autoPlay></video>}
+          { !loaded && <div className="lds-ripple"><div></div><div></div></div>}
+        </div>
       </div>
-      <div className="relative px-4 -mt-16">
-        <div className="bg-white p-6 rounded-lg shadow-lg flex">
+      <div className="relative px-4 -mt-16 ">
+        <div className={`bg-white p-6 rounded-lg shadow-lg flex ${ loaded ? 'border-4 border-green-400' : ''}`}>
           <div className="flex-grow">
             <div className="flex items-baseline">
               <div className="text-gray-600 text-xs uppercase font-semibold tracking-wide">

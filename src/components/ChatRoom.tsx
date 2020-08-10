@@ -92,13 +92,13 @@ const ChatRoom = (props: any) => {
   return (
     <div className="flex">
       <div className="flex flex-col flex-grow h-screen">
-        <div className="flex flex-wrap py-3 px-5 sm:px-20 sm:py-10 bg-gray-800 flex-grow">
-          <VideoStream loading={loaded} user={user} stream={localConnection.stream}/>
-          { remoteConections.map(conn => <VideoStream loading={true} key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
+        <div className="flex flex-wrap py-3 px-5 sm:px-10 sm:py-10 bg-gray-700 flex-grow border-2 border-gray-800">
+          <VideoStream loaded={loaded} user={user} stream={localConnection.stream}/>
+          { remoteConections.map(conn => <VideoStream loaded={true} key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
         </div>
-        <div className="h-32 bg-green-400">Controls</div>
+        <div className="h-16 bg-green-400">Controls</div>
       </div>
-      <div className="h-screen w-1/5 bg-gray-500">
+      <div className="h-screen w-1/4 lg:w-1/5">
         Hello
       </div>
     </div>

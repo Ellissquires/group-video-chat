@@ -8,21 +8,15 @@ const RoomList = (props: any) => {
   const [rooms, setRooms] = useState([] as Room[]);
 
   useEffect(() => {
-    let mounted = true;
+    socket.on("new-room", (room: Room) => setRooms([...rooms, room]));
+    axios.get<Room[]>("/rooms").then(response => setRooms(response.data));
 
-    socket.on("new-room", (room: Room) => {
-      if (mounted) setRooms([...rooms, room]);
-    });
-
-    axios.get<Room[]>("/rooms").then(response => {
-      if (mounted) setRooms(response.data);
-    });
-
-    return () => {
-      socket.off("new-room")
-      mounted = false;
-    }
+    return () => socket.off("new-room")
   });
+
+  const createRoom = () => {
+    axios.get("/create-room");
+  }
 
   return (
     <div>
@@ -38,6 +32,8 @@ const RoomList = (props: any) => {
           </li>
         )}
       </ul>
+
+      <button onClick={createRoom}>Create room</button>
     </div>
   )
 };

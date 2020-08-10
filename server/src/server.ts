@@ -78,9 +78,9 @@ export class Server {
       // Handling room connections
       socket.on('join', (data) => {
         // find the room the user connected to
-        let room: Room = this.findRoom(data.room);
-        // if the room doesnt exist create the room
-        if(!room) room = this.findRoom(this.createRoom());
+        const room: Room = this.findRoom(data.room);
+        // if the room doesnt exist notify the client
+        if(!room) return socket.emit('join-failed');
         // if the room exists notify the client they have successfully joined
         socket.emit('join-success', user);
         // notify the rooms users that a new user has joined
