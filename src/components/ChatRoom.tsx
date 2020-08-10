@@ -14,6 +14,7 @@ const ChatRoom = (props: any) => {
   const { socket } = props;
   // state to manage if a user is connected to the room or not
   const [ connected, setConnected ] = useState(false);
+  const [ loaded, setLoaded ] = useState(false);
   // state to manage the local user
   const [ user, setUser ] = useState({} as User);
   // stores the local users connection to the room, contains local video stream
@@ -76,29 +77,30 @@ const ChatRoom = (props: any) => {
   }
 
   useEffect(() => {
-    // Load the users camera feed into a local Connection object
-    async function enableLocalStream() {
-      const stream = await navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS);
-      setLocalConnection(new Connection(stream, null, user));
-      return stream;
-    }
-    
     // Once the users stream has loaded setup socket hooks and notify the server that the client has joined the room
-    enableLocalStream().then((stream) => {
+    navigator.mediaDevices.getUserMedia(VIDEO_OPTIONS).then(stream => {
+      // Load the users camera feed into a local Connection object
+      setLocalConnection(new Connection(stream, null, user));
+      setLoaded(true);
       socket.on('join-success', (user: User) => setupLocalPeer(user, stream));
       socket.on('join-failed', () => console.log("Could not join the room"));
       socket.emit('join', {room: id});
     }).catch(() => console.log("Could not receive video feed"));
-    
-    // return () => {
-    //   socket.emit('leave', {room: id, user: user});
-    // }
+
   },[id]);
 
   return (
-    <div className="flex flex-wrap h-screen py-3 px-5 w-full sm:px-20 sm:py-10 bg-gray-200">
-      { connected ? <VideoStream user={user} stream={localConnection.stream}/> : <p>Connecting...</p> }
-      { remoteConections.map(conn => <VideoStream key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
+    <div className="flex">
+      <div className="flex flex-col flex-grow h-screen">
+        <div className="flex flex-wrap py-3 px-5 sm:px-20 sm:py-10 bg-gray-800 flex-grow">
+          <VideoStream loading={loaded} user={user} stream={localConnection.stream}/>
+          { remoteConections.map(conn => <VideoStream loading={true} key={conn.user.id} user={conn.user} stream={conn.stream}/>) }
+        </div>
+        <div className="h-32 bg-green-400">Controls</div>
+      </div>
+      <div className="h-screen w-1/5 bg-gray-500">
+        Hello
+      </div>
     </div>
   )
 }

@@ -106,11 +106,6 @@ export class Server {
         console.log(`User disconnected (${user.id})`);
       });
 
-      /* TODO implement this properly
-        1. find the room being left
-        2. unsusbcribe the user from the room socket broadcasts
-        3. ...
-      */
       socket.on('leave', (data) => {
         const { room , user } = data;
         socket.leave(room);

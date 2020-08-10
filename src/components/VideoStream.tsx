@@ -5,16 +5,17 @@ import { User } from '../types';
 type VideoStreamProps = {
   stream: MediaStream;
   user: User;
+  loading: boolean;
 }
 
 const VideoStream = (props: VideoStreamProps) => {
   let videoRef = useRef<HTMLVideoElement>();
-  const { stream, user } = props;
+  const { stream, user, loading} = props;
 
   useEffect(() => { videoRef.current.srcObject = stream });
 
   return (
-    <div className="p-4 w-full sm:w-1/2 lg:max-w-lg select-none">
+    <div className="p-4 sm:w-full md:w-1/2 lg:max-w-lg select-none">
       <div className="relative pb-3/4">
         <video className="absolute h-full w-full rounded-lg shadow-md object-cover" ref={videoRef} autoPlay></video>
       </div>
@@ -25,7 +26,6 @@ const VideoStream = (props: VideoStreamProps) => {
               <div className="text-gray-600 text-xs uppercase font-semibold tracking-wide">
                 Ping 24ms
               </div>
-              {/* <span className={isActiveClass}>Active</span> */}
             </div>
             <h4 className="mt-2 font-semibold text-lg leading-tight truncate">
               {user.id}
@@ -39,6 +39,7 @@ const VideoStream = (props: VideoStreamProps) => {
         </div>
       </div>
     </div>
+
   )
   
 }
